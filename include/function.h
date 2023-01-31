@@ -5,12 +5,12 @@
 ** All function prototype
 */
 
-#include <SFML/Window.h>
-#include <SFML/Graphics.h>
-#include <SFML/System.h>
-#include <SFML/OpenGL.h>
+#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
+#include <SFML/OpenGL.hpp>
 #include <GL/glext.h>
-#include <SFML/Audio.h>
+#include <SFML/Audio.hpp>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>

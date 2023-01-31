@@ -6,6 +6,9 @@
 
 #include "include/function.h"
 
+#define WIDTH 640
+#define HEIGHT 480
+
 char *read_shader(char * filepath)
 {
     struct stat st;
@@ -14,7 +17,7 @@ char *read_shader(char * filepath)
 
     stat(filepath, &st);
     size = st.st_size;
-    char *buffer = malloc(sizeof(char) * size + 1);
+    char *buffer = (char *)malloc(sizeof(char) * size + 1);
 
     buffer[size] = '\0';
     file = open(filepath, O_RDONLY);
@@ -79,30 +82,29 @@ int init_fragment_shader()
 
 
 
-void poll_event(sfRenderWindow *window, sfEvent event)
+void poll_event(sf::RenderWindow *window, sf::Event event)
 {
-    while (sfRenderWindow_pollEvent(window, &event))
+    while (window->pollEvent(event))
     {
-        if (event.type == sfEvtClosed) {
-            sfRenderWindow_close(window);
+        if (event.type == sf::Event::Closed) {
+            window->close();
         }
     }
 }
 
-void update(sfRenderWindow *window, sfEvent event)
+void update(sf::RenderWindow *window, sf::Event event)
 {
-    sfSound *song;
-    sfSoundBuffer *soundBuffer;
-    song = sfSound_create();
-    soundBuffer = sfSoundBuffer_createFromFile("song.ogg");
-    sfSound_setBuffer(song, soundBuffer);
-    sfSound_play(song);
-    int sc = sfSoundBuffer_getSampleCount(soundBuffer);
-    short *samples = malloc(sizeof(samples) * (sc));
+    sf::Sound song;
+    sf::SoundBuffer soundBuffer;
+    soundBuffer.loadFromFile("song.ogg");
+    song.setBuffer(soundBuffer);
+    song.play();
+    int sc = soundBuffer.getSampleCount();
+    short *samples = (short *)malloc(sizeof(samples) * (sc));
 
 
     for (int i = 0; i < sc; i++)
-        samples[i] = sfSoundBuffer_getSamples(soundBuffer)[i];
+        samples[i] = soundBuffer.getSamples()[i];
     int j = 0;
 
 
@@ -151,12 +153,12 @@ void update(sfRenderWindow *window, sfEvent event)
     float glowness = 1.0;
     float mid;
 
-    while (sfRenderWindow_isOpen(window)) {
+    while (window->isOpen()) {
        poll_event(window, event);
-       sfRenderWindow_display(window);
+       window->display();
        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
        glClear(GL_COLOR_BUFFER_BIT);
-       j = sfTime_asMilliseconds(sfSound_getPlayingOffset(song)) * 88.15;
+       j = song.getPlayingOffset().asMilliseconds() * 88.15;
        if(j > 500) {
            mid = 0;
            for(int i = -500; i < 500; i++) {
@@ -182,18 +184,17 @@ void update(sfRenderWindow *window, sfEvent event)
        glProgramUniform1f(shaderProgram, glowness_loc, glowness);
 
        GLint resolution_loc = glGetProgramResourceLocation(shaderProgram, GL_UNIFORM, "resolution");
-       glProgramUniform2f(shaderProgram, resolution_loc,  1920, 1080);
+       glProgramUniform2f(shaderProgram, resolution_loc, WIDTH, HEIGHT);
 
    }
 }
 
 int main()
 {
-    sfRenderWindow *window;
-    sfEvent event;
-    sfVideoMode mode = sfVideoMode_getDesktopMode();
-    window = sfRenderWindow_create(mode, "CSFML Audio Visualizer", sfFullscreen, NULL);
-    sfRenderWindow_setFramerateLimit(window, 60);
+    sf::Event event;
+    sf::VideoMode mode(WIDTH, HEIGHT, 32); // = sf::VideoMode::getDesktopMode();
+    sf::RenderWindow window(mode, "CSFML Audio Visualizer"); // , sf::Style::Fullscreen);
+    window.setFramerateLimit(60);
     glViewport(0, 0, mode.width, mode.height);
-    update(window, event);
+    update(&window, event);
 }

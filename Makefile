@@ -11,10 +11,10 @@ NAME	=	test
 
 ERROR = -W -Wall -Wextra
 
-SFML = -lcsfml-graphics -lcsfml-audio -lcsfml-window -lcsfml-system -lcsfml-network -DGL_GLEXT_PROTOTYPES -lOpenGL
+SFML = -lsfml-graphics -lsfml-audio -lsfml-window -lsfml-system -lsfml-network -DGL_GLEXT_PROTOTYPES -lOpenGL
 
 all:
-	gcc -o $(NAME) $(SRC) $(SFML) $(ERROR) -lm
+	g++ -o $(NAME) $(SRC) $(SFML) $(ERROR) -lm
 clean:
 	rm -f $(CRITO) $(CRITA) unit-tests
 
@@ -24,5 +24,5 @@ fclean:
 re:	fclean all
 
 tests_run:
-	gcc -o unit-tests ./lib/my/*.c ./tests/*.c $(SRC) -lcriterion --coverage
+	g++ -o unit-tests ./lib/my/*.c ./tests/*.c $(SRC) -lriterion --coverage
 	./unit-tests
