@@ -92,19 +92,43 @@ void poll_event(sf::RenderWindow *window, sf::Event event)
     }
 }
 
-void update(sf::RenderWindow *window, sf::Event event)
+#include <stdio.h>
+#include <assert.h>
+#include <string.h>
+
+class MyRecorder : public sf::SoundBufferRecorder {
+public:
+    MyRecorder() : sf::SoundBufferRecorder(), m_sample_count(1) {
+        m_samples2 = (sf::Int16 *)malloc(sizeof(*m_samples2) * m_sample_count);
+        assert(m_samples2);
+    }
+
+    sf::Int16 operator[](int index) const {
+        if (index > m_sample_count) {
+            return 0;  // .e. silence
+        }
+        return m_samples2[index];
+    }
+    
+    size_t getTotalSamplesCount() const {
+        return m_sample_count;
+    }
+
+private:
+    bool onProcessSamples (const sf::Int16 *samples, std::size_t sampleCount) {
+        const size_t new_sampleCount = m_sample_count + sampleCount;
+        m_samples2 = (sf::Int16 *)realloc(m_samples2, sizeof(*m_samples2) * new_sampleCount);
+        assert(m_samples2);
+        memcpy(m_samples2 + m_sample_count, samples, sizeof(*m_samples2) * sampleCount);
+        m_sample_count = new_sampleCount;
+    }
+
+    sf::Int16 * m_samples2;
+    size_t m_sample_count;
+};
+
+void update(sf::RenderWindow *window, sf::Event event, const MyRecorder & recorder)
 {
-    sf::Sound song;
-    sf::SoundBuffer soundBuffer;
-    soundBuffer.loadFromFile("song.ogg");
-    song.setBuffer(soundBuffer);
-    song.play();
-    int sc = soundBuffer.getSampleCount();
-    short *samples = (short *)malloc(sizeof(samples) * (sc));
-
-
-    for (int i = 0; i < sc; i++)
-        samples[i] = soundBuffer.getSamples()[i];
     int j = 0;
 
 
@@ -158,11 +182,14 @@ void update(sf::RenderWindow *window, sf::Event event)
        window->display();
        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
        glClear(GL_COLOR_BUFFER_BIT);
-       j = song.getPlayingOffset().asMilliseconds() * 88.15;
+       j = recorder.getTotalSamplesCount();
+       if (j >= 500) {
+           j -= 500;
+       }
        if(j > 500) {
            mid = 0;
            for(int i = -500; i < 500; i++) {
-               mid += abs(samples[j - i]);
+               mid += abs(recorder[j - i]);
             }
             mid /= 1000;
         }
@@ -191,10 +218,15 @@ void update(sf::RenderWindow *window, sf::Event event)
 
 int main()
 {
+    assert(sf::SoundBufferRecorder::isAvailable());
+    MyRecorder recorder;
+    recorder.setChannelCount(1);
+    recorder.start();
+
     sf::Event event;
     sf::VideoMode mode(WIDTH, HEIGHT, 32); // = sf::VideoMode::getDesktopMode();
     sf::RenderWindow window(mode, "CSFML Audio Visualizer"); // , sf::Style::Fullscreen);
     window.setFramerateLimit(60);
     glViewport(0, 0, mode.width, mode.height);
-    update(&window, event);
+    update(&window, event, recorder);
 }
