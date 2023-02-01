@@ -196,7 +196,7 @@ void update(sf::RenderWindow *window, sf::Event event, const MyRecorder & record
        time += 10;
        glowness = mid / 100000;
        phase = mid / 500;
-       height = mid / 5000;
+       height = mid / 1000;
        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
        GLint time_loc = glGetProgramResourceLocation(shaderProgram, GL_UNIFORM, "time");
        glProgramUniform1f(shaderProgram, time_loc, time);
